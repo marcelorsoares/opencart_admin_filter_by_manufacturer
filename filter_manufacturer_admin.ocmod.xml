@@ -1,0 +1,146 @@
+<modification>
+    <name>Filter Products by Manufacturer</name>
+    <id>filter_products_by_manuf</id>
+    <code>filter_products_by_manuf</code>
+    <version>0.1</version>
+    <author>Marcelo Soares</author>
+    <link>https://github.com/marcelorsoares</link>
+
+    <file path="admin/model/catalog/product.php">
+        <operation>
+            
+            <search><![CDATA[$sql = "SELECT * FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) WHERE pd.language_id = '" . (int)$this->config->get('config_language_id') . "'";]]></search>
+
+
+            <add position="replace"><![CDATA[$sql = "SELECT p.*, pd.*, man.name AS manufacturer FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_description pd ON (p.product_id = pd.product_id) LEFT JOIN " . DB_PREFIX . "manufacturer AS man ON (p.manufacturer_id = man.manufacturer_id) WHERE pd.language_id = '" . (int)$this->config->get('config_language_id') . "'";]]></add>
+
+        </operation>
+        <operation>
+
+            <search><![CDATA[if (!empty($data['filter_name'])) {]]></search>
+
+
+            <add position="before"><![CDATA[if (isset($data['filter_manufacturer']) && !is_null($data['filter_manufacturer'])) {
+                    $sql .= " AND p.manufacturer_id =" . (int)$data['filter_manufacturer']; }]]></add>
+
+        </operation>
+
+    </file>
+
+
+    <file path="admin/controller/catalog/product.php">
+        <operation>
+
+            <search><![CDATA[protected function getList() {]]></search>
+
+            <add position="after"><![CDATA[if (isset($this->request->get['filter_manufacturer'])) {
+                  $filter_manufacturer = $this->request->get['filter_manufacturer'];
+                      } else {
+                            $filter_manufacturer = null;
+                      }
+             ]]></add>
+
+        </operation>
+
+        <operation>
+            <search><![CDATA[if (isset($this->request->get['filter_quantity'])) {
+            $url .= '&filter_quantity=' . $this->request->get['filter_quantity'];
+        }]]></search>
+
+            <add position="before"><![CDATA[if (isset($this->request->get['filter_manufacturer'])) {
+                $url .= '&filter_manufacturer=' . $this->request->get['filter_manufacturer'];
+            }]]></add>
+        </operation>
+
+        <operation>
+            <search><![CDATA['filter_status'   => $filter_status,]]></search>
+
+            <add position="after"><![CDATA['filter_manufacturer'     => $filter_manufacturer,]]></add>
+        </operation>
+    
+        <operation>
+            <search><![CDATA[$data['products'][] = array(]]></search>
+
+            <add position="after"><![CDATA[
+                  'manufacturer' => $result['manufacturer'],
+             ]]></add>
+        </operation>
+    
+    </file>
+
+
+    <file path="admin/view/template/catalog/product_list.tpl">
+        <operation>
+            
+            <search><![CDATA[<td align="right"><input type="text" name="filter_quantity" value="<?php echo $filter_quantity; ?>" style="text-align: right;" />]]></search>
+
+
+            <add position="after"><![CDATA[<td align="right"><input type="text" name="filter_manufacturer" value="<?php echo $filter_manufacturer; ?>" style="text-align: right;" />]]></add>
+
+        </operation>
+
+        <operation>
+
+            <search><![CDATA[var filter_status = $('select[name=\'filter_status\']').val();]]></search>
+
+
+            <add position="before"><![CDATA[var filter_manufacturer = $('input[name=\'filter_manufacturer\']').val();
+    if (filter_manufacturer != '*') {
+        url += '&filter_manufacturer=' + encodeURIComponent(filter_manufacturer);
+    }]]></add>
+
+        </operation>
+
+        <operation>
+
+            <search><![CDATA[$('input[name=\'filter_name\']').autocomplete({]]></search>
+
+
+            <add position="before"><![CDATA[$('input[name=\'filter_manufacturer\']').autocomplete({
+    'source': function(request, response) {
+        $.ajax({
+            url: 'index.php?route=catalog/manufacturer/autocomplete&token=<?php echo $token; ?>&filter_name=' +  encodeURIComponent(request),
+            dataType: 'json',
+            success: function(json) {
+                response($.map(json, function(item) {
+                    return {
+                        label: item['name'],
+                        value: item['manufacturer_id']
+                    }
+                }));
+            }
+        });
+    },
+    'select': function(item) {
+        $('input[name=\'filter_manufacturer\']').val(item['value']);
+    }
+});]]></add>
+
+        </operation>
+
+        <operation>
+            <search><![CDATA[<td class="text-right"><?php echo $column_action; ?></td>]]></search>
+
+            <add position="before"><![CDATA[
+                <td class="text-left">Fabricante</td>
+            ]]></add>
+        </operation>
+
+        <operation>
+            <search><![CDATA[<td class="text-right"><a href="<?php echo $product['edit']; ?>" data-toggle="tooltip" title="<?php echo $button_edit; ?>" class="btn btn-primary"><i class="fa fa-pencil"></i></a></td>]]></search>
+
+            <add position="before"><![CDATA[ 
+                    <td class="text-left"><?php echo $product['manufacturer']; ?></td>
+              ]]></add>
+        </operation>
+
+        <operation>
+            <search><![CDATA[<label class="control-label" for="input-status"><?php echo $entry_status; ?></label>]]></search>
+
+            <add position="before"><![CDATA[<label class="control-label" for="input-manufacturer">Fabricante</label>
+                <input type="text" name="filter_manufacturer" value="<?php echo @$filter_manufacturer; ?>" placeholder="Fabricante" id="input-manufacturer" class="form-control" /></div><div class="form-group">]]></add>
+        </operation>
+
+    </file>
+
+</modification>
