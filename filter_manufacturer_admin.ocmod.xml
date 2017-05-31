@@ -2,9 +2,9 @@
     <name>Filter Products by Manufacturer</name>
     <id>filter_products_by_manuf</id>
     <code>filter_products_by_manuf</code>
-    <version>0.1</version>
+    <version>0.2</version>
     <author>Marcelo Soares</author>
-    <link>https://github.com/marcelorsoares</link>
+    <link>https://github.com/marcelorsoares/opencart_admin_filter_by_manufacturer</link>
 
     <file path="admin/model/catalog/product.php">
         <operation>
@@ -85,7 +85,7 @@
 
 
             <add position="before"><![CDATA[var filter_manufacturer = $('input[name=\'filter_manufacturer\']').val();
-    if (filter_manufacturer != '*') {
+    if (filter_manufacturer) {
         url += '&filter_manufacturer=' + encodeURIComponent(filter_manufacturer);
     }]]></add>
 
